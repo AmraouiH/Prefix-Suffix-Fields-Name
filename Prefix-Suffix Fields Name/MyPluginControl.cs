@@ -47,6 +47,7 @@ namespace Prefix_Suffix_Fields_Name
 
         private void tsbSample_Click(object sender, EventArgs e)
         {
+            RenameFields(Service);
             // The ExecuteMethod method handles connecting to an
             // organization if XrmToolBox is not yet connected
             ExecuteMethod(GetAccounts);
@@ -102,6 +103,18 @@ namespace Prefix_Suffix_Fields_Name
                 mySettings.LastUsedOrganizationWebappUrl = detail.WebApplicationUrl;
                 LogInfo("Connection has changed to: {0}", detail.WebApplicationUrl);
             }
+        }
+
+        public void RenameFields(IOrganizationService service) {
+
+            string text = "Salah";
+            String[] fields = new String[] {
+                "name","phone"
+            };
+
+
+
+
         }
     }
 }
