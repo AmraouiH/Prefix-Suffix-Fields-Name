@@ -111,8 +111,8 @@ namespace Prefix_Suffix_Fields_Name
             String[] fields = new String[] {
                 "name","phone"
             };
-
-
+            string preText = fields[0] + text;
+            string postText = text + fields[1];
 
 
         }
