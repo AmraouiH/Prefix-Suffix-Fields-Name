@@ -11,6 +11,10 @@ using XrmToolBox.Extensibility;
 using Microsoft.Xrm.Sdk.Query;
 using Microsoft.Xrm.Sdk;
 using McTools.Xrm.Connection;
+using Microsoft.Xrm.Sdk.Messages;
+using System.Windows.Documents;
+using Microsoft.Xrm.Sdk.Metadata;
+using Label = Microsoft.Xrm.Sdk.Label;
 
 namespace Prefix_Suffix_Fields_Name
 {
@@ -107,13 +111,18 @@ namespace Prefix_Suffix_Fields_Name
 
         public void RenameFields(IOrganizationService service) {
 
-            string text = "Salah";
-            String[] fields = new String[] {
-                "name","phone"
+            AttributeMetadata retrievedAttributeMetadata = new AttributeMetadata();
+            retrievedAttributeMetadata.DisplayName =  new Label("tt_telephone1", 1033);
+            retrievedAttributeMetadata.LogicalName = "telephone1";
+            UpdateAttributeRequest updateRequest = new UpdateAttributeRequest
+            {
+                Attribute = retrievedAttributeMetadata,
+                EntityName = "contact",
+                MergeLabels = false
             };
-            string preText = fields[0] + text;
-            string postText = text + fields[1];
 
+            // Execute the request
+            service.Execute(updateRequest);
 
         }
     }
