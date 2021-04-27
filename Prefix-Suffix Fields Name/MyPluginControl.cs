@@ -12,15 +12,17 @@ using Microsoft.Xrm.Sdk.Query;
 using Microsoft.Xrm.Sdk;
 using McTools.Xrm.Connection;
 using Microsoft.Xrm.Sdk.Messages;
-using System.Windows.Documents;
-using Microsoft.Xrm.Sdk.Metadata;
-using Label = Microsoft.Xrm.Sdk.Label;
 
 namespace Prefix_Suffix_Fields_Name
 {
     public partial class MyPluginControl : PluginControlBase
     {
         private Settings mySettings;
+        DataTable dtEntities = null;
+        DataTable dtFields = null;
+        Dictionary<String, String> entityFields = null;
+        String entitySelectedName = String.Empty;
+        String entitySelectedSchemaName = String.Empty;
 
         public MyPluginControl()
         {
@@ -51,38 +53,8 @@ namespace Prefix_Suffix_Fields_Name
 
         private void tsbSample_Click(object sender, EventArgs e)
         {
-            RenameFields(Service);
-            // The ExecuteMethod method handles connecting to an
-            // organization if XrmToolBox is not yet connected
-            ExecuteMethod(GetAccounts);
         }
 
-        private void GetAccounts()
-        {
-            WorkAsync(new WorkAsyncInfo
-            {
-                Message = "Getting accounts",
-                Work = (worker, args) =>
-                {
-                    args.Result = Service.RetrieveMultiple(new QueryExpression("account")
-                    {
-                        TopCount = 50
-                    });
-                },
-                PostWorkCallBack = (args) =>
-                {
-                    if (args.Error != null)
-                    {
-                        MessageBox.Show(args.Error.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    var result = args.Result as EntityCollection;
-                    if (result != null)
-                    {
-                        MessageBox.Show($"Found {result.Entities.Count} accounts");
-                    }
-                }
-            });
-        }
 
         /// <summary>
         /// This event occurs when the plugin is closed
@@ -109,21 +81,172 @@ namespace Prefix_Suffix_Fields_Name
             }
         }
 
-        public void RenameFields(IOrganizationService service) {
+        private void loadEntitiesButto_Click(object sender, EventArgs e)
+        {
+            ExecuteMethod(loadEntities);
+        }
 
-            AttributeMetadata retrievedAttributeMetadata = new AttributeMetadata();
-            retrievedAttributeMetadata.DisplayName =  new Label("tt_telephone1", 1033);
-            retrievedAttributeMetadata.LogicalName = "telephone1";
-            UpdateAttributeRequest updateRequest = new UpdateAttributeRequest
+        private void loadEntities()
+        {
+            InitComponents();
+            //searchEntity.Enabled = false;
+            WorkAsync(new WorkAsyncInfo
             {
-                Attribute = retrievedAttributeMetadata,
-                EntityName = "contact",
-                MergeLabels = false
-            };
+                Message = "Retrieving Entities...",
+                Work = (worker, args) =>
+                {
+                    #region Variables
+                    dtEntities = new DataTable();
+                    #endregion
+                    #region getEntitiesMetadata
+                    RetrieveMetadataChangesResponse _allEntitiesResp = PreffixSuffixFieldsNameManager.GetEntitiesMetadat(Service);
+                    #endregion
 
-            // Execute the request
-            service.Execute(updateRequest);
+                    worker.ReportProgress(0, string.Format("Metadata has been retrieved!"));
 
+                    #region Entities Data Table Set
+                    dtEntities.Columns.Add("Analyse", typeof(bool));
+                    dtEntities.Columns.Add("DisplayName", typeof(string));
+                    dtEntities.Columns.Add("SchemaName", typeof(string));
+
+                    foreach (var item in _allEntitiesResp.EntityMetadata)
+                    {
+                        DataRow row = dtEntities.NewRow();
+                        row["Analyse"] = false;
+                        row["DisplayName"] = item.DisplayName.LocalizedLabels.Count > 0 ? item.DisplayName.UserLocalizedLabel.Label.ToString() : null;
+                        row["SchemaName"] = item.LogicalName;
+
+                        dtEntities.Rows.Add(row);
+                    }
+                    #endregion
+                    args.Result = dtEntities;
+                },
+                ProgressChanged = e =>
+                {
+                    // If progress has to be notified to user, use the following method:
+                    SetWorkingMessage(e.UserState.ToString());
+                },
+                PostWorkCallBack = (args) =>
+                {
+                    if (args.Error != null)
+                    {
+                        MessageBox.Show(args.Error.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    var result = (DataTable)args.Result;
+                    if (result != null)
+                    {
+                        #region Set Retrieved Data in the Data Grid View
+                        PreffixSuffixFieldsNameManager.SetEntitiesGridViewHeaders(result, entityDataGridView);
+                        #endregion
+                        #region ManageComponenetVisibility
+                        //searchEntity.Enabled = true;
+                        //analyseButton.Enabled = true;
+                        #endregion
+                    }
+                }
+            });
+        }
+
+        private void InitComponents()
+        {
+        }
+
+        private void loadFieldsButton_Click(object sender, EventArgs e)
+        {
+            String[] entitySelected = PreffixSuffixFieldsNameManager.SelectedEntity(entityDataGridView.Rows);
+            if (entitySelected.Length > 0)
+            {
+                entitySelectedName = entitySelected[0];
+                entitySelectedSchemaName = entitySelected[1];
+                ExecuteMethod(GetEntityFields);
+            }
+            else
+            {
+                MessageBox.Show("No Entity Was Selected! Please Select an Entity", "Warning");
+                return;
+            }
+        }
+
+        private void GetEntityFields()
+        {
+            //fieldTypeCombobox.Enabled = false;
+            //buttonExport.Enabled = false;
+            //analyseButton.Enabled = false;
+            //DisplayPercentageCheckbox.Enabled = false;
+            WorkAsync(new WorkAsyncInfo
+            {
+                Message = "Analysing ...",
+                Work = (worker, args) =>
+                {
+                    try
+                    {
+                        dtFields = new DataTable();
+                        entityFields = PreffixSuffixFieldsNameManager.getEntityFields(Service, entitySelectedSchemaName, worker);
+
+                        #region Entity Fiels Metadata  Set
+                        dtFields.Columns.Add("Select", typeof(bool));
+                        dtFields.Columns.Add("Display Name", typeof(string));
+                        dtFields.Columns.Add("Schema Name", typeof(string));
+                        #endregion
+
+                        foreach (var item in entityFields)
+                        {
+                            DataRow row = dtFields.NewRow();
+                            row["Select"] = false;
+                            row["Display Name"] = item.Value;
+                            row["Schema Name"] = item.Key;
+
+                            dtFields.Rows.Add(row);
+                        }
+
+                        args.Result = dtFields;
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show(e.Message, "Warning");
+                    }
+                },
+                ProgressChanged = e =>
+                {
+                    // If progress has to be notified to user, use the following method:
+                    SetWorkingMessage(e.UserState.ToString());
+                },
+                PostWorkCallBack = (args) =>
+                {
+                    if (args.Error != null)
+                    {
+                        MessageBox.Show(args.Error.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    var result = (DataTable)args.Result;
+                    if (result != null)
+                    {
+                        PreffixSuffixFieldsNameManager.SetFieldsGridViewHeaders(result, fieldsDataGridView);
+                    }
+                }
+            });
+        }
+
+        private void entityDataGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0)
+            {
+                foreach (DataGridViewRow row in this.entityDataGridView.Rows)
+                {
+                    if ((bool)entityDataGridView.Rows[e.RowIndex].Cells["Analyse"].Value)
+                        continue;
+                    row.Cells["Analyse"].Value = false;
+                }
+
+                this.entityDataGridView.Rows[e.RowIndex].Cells["Analyse"].Value = !(bool)entityDataGridView.Rows[e.RowIndex].Cells["Analyse"].Value;
+            }
+        }
+
+        private void ProceedButton_Click(object sender, EventArgs e)
+        {
+            var entityName = String.Empty;
+            var text = PSTextBox.Text;
+            Dictionary <String, String> selectedFields = PreffixSuffixFieldsNameManager.SelectedFields(fieldsDataGridView.Rows);
+            PreffixSuffixFieldsNameManager.UpdateNames(Service, text, preffixButton.Checked ? "Preffix" : "Suffix", AddButton.Checked ? "Add":"Remove", selectedFields, entitySelectedSchemaName);
         }
     }
 }
