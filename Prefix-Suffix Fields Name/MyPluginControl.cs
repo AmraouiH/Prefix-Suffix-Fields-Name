@@ -185,16 +185,16 @@ namespace Prefix_Suffix_Fields_Name
 
                         #region Entity Fiels Metadata  Set
                         dtFields.Columns.Add("Select", typeof(bool));
-                        dtFields.Columns.Add("Display Name", typeof(string));
-                        dtFields.Columns.Add("Schema Name", typeof(string));
+                        dtFields.Columns.Add("DisplayName", typeof(string));
+                        dtFields.Columns.Add("SchemaName", typeof(string));
                         #endregion
 
                         foreach (var item in entityFields)
                         {
                             DataRow row = dtFields.NewRow();
                             row["Select"] = false;
-                            row["Display Name"] = item.Value;
-                            row["Schema Name"] = item.Key;
+                            row["DisplayName"] = item.Value;
+                            row["SchemaName"] = item.Key;
 
                             dtFields.Rows.Add(row);
                         }
@@ -247,6 +247,57 @@ namespace Prefix_Suffix_Fields_Name
             var text = PSTextBox.Text;
             Dictionary <String, String> selectedFields = PreffixSuffixFieldsNameManager.SelectedFields(fieldsDataGridView.Rows);
             PreffixSuffixFieldsNameManager.UpdateNames(Service, text, preffixButton.Checked ? "Preffix" : "Suffix", AddButton.Checked ? "Add":"Remove", selectedFields, entitySelectedSchemaName);
+        }
+
+        private void entityTextSearch_TextChanged(object sender, EventArgs e)
+        {
+            FilterDate(entityDataGridView, entityTextSearch, dtEntities);
+        }
+
+        private void FilterDate(DataGridView dataGrid, TextBox textBoxName, DataTable dataTable)
+        {
+
+            if (textBoxName.Text == "" && dataTable.Rows.Count > 0 && dataGrid.Rows.Count != dataTable.Rows.Count)
+            {
+                PreffixSuffixFieldsNameManager.SetEntitiesGridViewHeaders(dataTable, dataGrid);
+            }
+            else if (textBoxName.Text != "Search" && textBoxName.Text != "" && dataTable.Rows.Count > 0)
+            {
+                string searchValue = textBoxName.Text.ToLower();
+                try
+                {
+                    DataRow[] filtered = dataTable.Select("DisplayName LIKE '%" + searchValue + "%' OR SchemaName LIKE '%" + searchValue + "%'");
+                    if (filtered.Count() > 0)
+                    {
+                        PreffixSuffixFieldsNameManager.SetEntitiesGridViewHeaders(filtered.CopyToDataTable(), dataGrid);
+                    }
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Invalid Search Character. Please do not use ' [ ] within searches.");
+                }
+            }
+        }
+
+        private void entityTextSearch_Click(object sender, EventArgs e)
+        {
+            if (entityTextSearch.Text == "Search")
+            {
+                entityTextSearch.Clear();
+            }
+        }
+
+        private void fieldsTextSearch_TextChanged(object sender, EventArgs e)
+        {
+            FilterDate(fieldsDataGridView, fieldsTextSearch, dtFields);
+        }
+
+        private void fieldsTextSearch_Click(object sender, EventArgs e)
+        {
+            if (fieldsTextSearch.Text == "Search")
+            {
+                entityTextSearch.Clear();
+            }
         }
     }
 }

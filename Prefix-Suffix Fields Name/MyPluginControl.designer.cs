@@ -38,9 +38,17 @@
             this.loadFieldsButton = new System.Windows.Forms.ToolStripButton();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.entitiesGroupBox = new System.Windows.Forms.GroupBox();
+            this.tableLayoutPanel9 = new System.Windows.Forms.TableLayoutPanel();
             this.entityDataGridView = new System.Windows.Forms.DataGridView();
+            this.tableLayoutPanel10 = new System.Windows.Forms.TableLayoutPanel();
+            this.label1 = new System.Windows.Forms.Label();
+            this.entityTextSearch = new System.Windows.Forms.TextBox();
             this.fieldsGroupBox = new System.Windows.Forms.GroupBox();
+            this.tablayout = new System.Windows.Forms.TableLayoutPanel();
             this.fieldsDataGridView = new System.Windows.Forms.DataGridView();
+            this.tableLayoutPanel11 = new System.Windows.Forms.TableLayoutPanel();
+            this.label2 = new System.Windows.Forms.Label();
+            this.fieldsTextSearch = new System.Windows.Forms.TextBox();
             this.propretiesGroupBox = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
@@ -61,12 +69,17 @@
             this.logGroupBox = new System.Windows.Forms.GroupBox();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenu.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.entitiesGroupBox.SuspendLayout();
+            this.tableLayoutPanel9.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.entityDataGridView)).BeginInit();
+            this.tableLayoutPanel10.SuspendLayout();
             this.fieldsGroupBox.SuspendLayout();
+            this.tablayout.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.fieldsDataGridView)).BeginInit();
+            this.tableLayoutPanel11.SuspendLayout();
             this.propretiesGroupBox.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
@@ -154,7 +167,7 @@
             // 
             // entitiesGroupBox
             // 
-            this.entitiesGroupBox.Controls.Add(this.entityDataGridView);
+            this.entitiesGroupBox.Controls.Add(this.tableLayoutPanel9);
             this.entitiesGroupBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.entitiesGroupBox.Location = new System.Drawing.Point(3, 3);
             this.entitiesGroupBox.Name = "entitiesGroupBox";
@@ -162,6 +175,21 @@
             this.entitiesGroupBox.TabIndex = 0;
             this.entitiesGroupBox.TabStop = false;
             this.entitiesGroupBox.Text = "Entities";
+            // 
+            // tableLayoutPanel9
+            // 
+            this.tableLayoutPanel9.ColumnCount = 1;
+            this.tableLayoutPanel9.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel9.Controls.Add(this.entityDataGridView, 0, 1);
+            this.tableLayoutPanel9.Controls.Add(this.tableLayoutPanel10, 0, 0);
+            this.tableLayoutPanel9.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel9.Location = new System.Drawing.Point(3, 16);
+            this.tableLayoutPanel9.Name = "tableLayoutPanel9";
+            this.tableLayoutPanel9.RowCount = 2;
+            this.tableLayoutPanel9.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
+            this.tableLayoutPanel9.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 90F));
+            this.tableLayoutPanel9.Size = new System.Drawing.Size(324, 540);
+            this.tableLayoutPanel9.TabIndex = 0;
             // 
             // entityDataGridView
             // 
@@ -171,16 +199,53 @@
             this.entityDataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.DisplayedCells;
             this.entityDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.entityDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.entityDataGridView.Location = new System.Drawing.Point(3, 16);
+            this.entityDataGridView.Location = new System.Drawing.Point(3, 57);
             this.entityDataGridView.Name = "entityDataGridView";
-            this.entityDataGridView.ReadOnly = true;
-            this.entityDataGridView.Size = new System.Drawing.Size(324, 540);
-            this.entityDataGridView.TabIndex = 0;
+            this.entityDataGridView.Size = new System.Drawing.Size(318, 480);
+            this.entityDataGridView.TabIndex = 1;
             this.entityDataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.entityDataGridView_CellContentClick);
+            // 
+            // tableLayoutPanel10
+            // 
+            this.tableLayoutPanel10.ColumnCount = 2;
+            this.tableLayoutPanel10.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
+            this.tableLayoutPanel10.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 70F));
+            this.tableLayoutPanel10.Controls.Add(this.label1, 0, 0);
+            this.tableLayoutPanel10.Controls.Add(this.entityTextSearch, 1, 0);
+            this.tableLayoutPanel10.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel10.Location = new System.Drawing.Point(3, 3);
+            this.tableLayoutPanel10.Name = "tableLayoutPanel10";
+            this.tableLayoutPanel10.RowCount = 1;
+            this.tableLayoutPanel10.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel10.Size = new System.Drawing.Size(318, 48);
+            this.tableLayoutPanel10.TabIndex = 2;
+            // 
+            // label1
+            // 
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.label1.AutoSize = true;
+            this.label1.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.label1.Location = new System.Drawing.Point(3, 17);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(89, 13);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "Entity :";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // entityTextSearch
+            // 
+            this.entityTextSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.entityTextSearch.Location = new System.Drawing.Point(98, 14);
+            this.entityTextSearch.Name = "entityTextSearch";
+            this.entityTextSearch.Size = new System.Drawing.Size(217, 20);
+            this.entityTextSearch.TabIndex = 1;
+            this.entityTextSearch.Text = "Search";
+            this.entityTextSearch.Click += new System.EventHandler(this.entityTextSearch_Click);
+            this.entityTextSearch.TextChanged += new System.EventHandler(this.entityTextSearch_TextChanged);
             // 
             // fieldsGroupBox
             // 
-            this.fieldsGroupBox.Controls.Add(this.fieldsDataGridView);
+            this.fieldsGroupBox.Controls.Add(this.tablayout);
             this.fieldsGroupBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.fieldsGroupBox.Location = new System.Drawing.Point(339, 3);
             this.fieldsGroupBox.Name = "fieldsGroupBox";
@@ -188,6 +253,21 @@
             this.fieldsGroupBox.TabIndex = 1;
             this.fieldsGroupBox.TabStop = false;
             this.fieldsGroupBox.Text = "Entity Fields";
+            // 
+            // tablayout
+            // 
+            this.tablayout.ColumnCount = 1;
+            this.tablayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tablayout.Controls.Add(this.fieldsDataGridView, 0, 1);
+            this.tablayout.Controls.Add(this.tableLayoutPanel11, 0, 0);
+            this.tablayout.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tablayout.Location = new System.Drawing.Point(3, 16);
+            this.tablayout.Name = "tablayout";
+            this.tablayout.RowCount = 2;
+            this.tablayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
+            this.tablayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 90F));
+            this.tablayout.Size = new System.Drawing.Size(324, 540);
+            this.tablayout.TabIndex = 0;
             // 
             // fieldsDataGridView
             // 
@@ -197,10 +277,47 @@
             this.fieldsDataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCellsExceptHeader;
             this.fieldsDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.fieldsDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.fieldsDataGridView.Location = new System.Drawing.Point(3, 16);
+            this.fieldsDataGridView.Location = new System.Drawing.Point(3, 57);
             this.fieldsDataGridView.Name = "fieldsDataGridView";
-            this.fieldsDataGridView.Size = new System.Drawing.Size(324, 540);
-            this.fieldsDataGridView.TabIndex = 0;
+            this.fieldsDataGridView.Size = new System.Drawing.Size(318, 480);
+            this.fieldsDataGridView.TabIndex = 1;
+            // 
+            // tableLayoutPanel11
+            // 
+            this.tableLayoutPanel11.ColumnCount = 2;
+            this.tableLayoutPanel11.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
+            this.tableLayoutPanel11.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 70F));
+            this.tableLayoutPanel11.Controls.Add(this.label2, 0, 0);
+            this.tableLayoutPanel11.Controls.Add(this.fieldsTextSearch, 1, 0);
+            this.tableLayoutPanel11.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel11.Location = new System.Drawing.Point(3, 3);
+            this.tableLayoutPanel11.Name = "tableLayoutPanel11";
+            this.tableLayoutPanel11.RowCount = 1;
+            this.tableLayoutPanel11.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel11.Size = new System.Drawing.Size(318, 48);
+            this.tableLayoutPanel11.TabIndex = 0;
+            // 
+            // label2
+            // 
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(3, 17);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(89, 13);
+            this.label2.TabIndex = 0;
+            this.label2.Text = "Fields";
+            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // fieldsTextSearch
+            // 
+            this.fieldsTextSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.fieldsTextSearch.Location = new System.Drawing.Point(98, 14);
+            this.fieldsTextSearch.Name = "fieldsTextSearch";
+            this.fieldsTextSearch.Size = new System.Drawing.Size(217, 20);
+            this.fieldsTextSearch.TabIndex = 1;
+            this.fieldsTextSearch.Text = "Search";
+            this.fieldsTextSearch.Click += new System.EventHandler(this.fieldsTextSearch_Click);
+            this.fieldsTextSearch.TextChanged += new System.EventHandler(this.fieldsTextSearch_TextChanged);
             // 
             // propretiesGroupBox
             // 
@@ -420,7 +537,7 @@
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 17F));
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 66F));
             this.tableLayoutPanel8.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 17F));
-            this.tableLayoutPanel8.Size = new System.Drawing.Size(190, 50);
+            this.tableLayoutPanel8.Size = new System.Drawing.Size(190, 46);
             this.tableLayoutPanel8.TabIndex = 1;
             // 
             // ProceedButton
@@ -428,9 +545,9 @@
             this.ProceedButton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.ProceedButton.Location = new System.Drawing.Point(41, 11);
+            this.ProceedButton.Location = new System.Drawing.Point(41, 10);
             this.ProceedButton.Name = "ProceedButton";
-            this.ProceedButton.Size = new System.Drawing.Size(108, 27);
+            this.ProceedButton.Size = new System.Drawing.Size(108, 24);
             this.ProceedButton.TabIndex = 1;
             this.ProceedButton.Text = "Proceed";
             this.ProceedButton.UseVisualStyleBackColor = true;
@@ -439,9 +556,9 @@
             // logGroupBox
             // 
             this.logGroupBox.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.logGroupBox.Location = new System.Drawing.Point(3, 165);
+            this.logGroupBox.Location = new System.Drawing.Point(3, 173);
             this.logGroupBox.Name = "logGroupBox";
-            this.logGroupBox.Size = new System.Drawing.Size(657, 372);
+            this.logGroupBox.Size = new System.Drawing.Size(657, 356);
             this.logGroupBox.TabIndex = 2;
             this.logGroupBox.TabStop = false;
             this.logGroupBox.Text = "Log";
@@ -450,6 +567,11 @@
             // 
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             this.contextMenuStrip1.Size = new System.Drawing.Size(61, 4);
+            // 
+            // contextMenuStrip2
+            // 
+            this.contextMenuStrip2.Name = "contextMenuStrip2";
+            this.contextMenuStrip2.Size = new System.Drawing.Size(61, 4);
             // 
             // MyPluginControl
             // 
@@ -464,9 +586,15 @@
             this.toolStripMenu.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.entitiesGroupBox.ResumeLayout(false);
+            this.tableLayoutPanel9.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.entityDataGridView)).EndInit();
+            this.tableLayoutPanel10.ResumeLayout(false);
+            this.tableLayoutPanel10.PerformLayout();
             this.fieldsGroupBox.ResumeLayout(false);
+            this.tablayout.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.fieldsDataGridView)).EndInit();
+            this.tableLayoutPanel11.ResumeLayout(false);
+            this.tableLayoutPanel11.PerformLayout();
             this.propretiesGroupBox.ResumeLayout(false);
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel3.ResumeLayout(false);
@@ -494,8 +622,6 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.GroupBox entitiesGroupBox;
         private System.Windows.Forms.GroupBox fieldsGroupBox;
-        private System.Windows.Forms.DataGridView entityDataGridView;
-        private System.Windows.Forms.DataGridView fieldsDataGridView;
         private System.Windows.Forms.GroupBox propretiesGroupBox;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
@@ -518,5 +644,16 @@
         private System.Windows.Forms.TextBox PSTextBox;
         private System.Windows.Forms.Button ProceedButton;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel8;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel9;
+        private System.Windows.Forms.DataGridView entityDataGridView;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel10;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox entityTextSearch;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip2;
+        private System.Windows.Forms.TableLayoutPanel tablayout;
+        private System.Windows.Forms.DataGridView fieldsDataGridView;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel11;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox fieldsTextSearch;
     }
 }

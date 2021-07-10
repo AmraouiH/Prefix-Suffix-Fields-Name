@@ -61,9 +61,9 @@ namespace Prefix_Suffix_Fields_Name
             fieldDataGridView.Columns[0].DefaultCellStyle.Alignment = DataGridViewContentAlignment.BottomCenter;
             fieldDataGridView.Columns[0].HeaderText = String.Empty;
             fieldDataGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            fieldDataGridView.Columns[1].HeaderText = "Display Name";
+            fieldDataGridView.Columns[1].HeaderText = "DisplayName";
             fieldDataGridView.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            fieldDataGridView.Columns[2].HeaderText = "Schema Name";
+            fieldDataGridView.Columns[2].HeaderText = "SchemaName";
         }
 
         public static Dictionary<String, String> getEntityFields(IOrganizationService service, String entityTechnicalName, BackgroundWorker worker)
