@@ -12,6 +12,9 @@ using Microsoft.Xrm.Sdk.Query;
 using Microsoft.Xrm.Sdk;
 using McTools.Xrm.Connection;
 using Microsoft.Xrm.Sdk.Messages;
+using Microsoft.Xrm.Sdk.Metadata;
+using System.Diagnostics;
+using Microsoft.Crm.Sdk.Messages;
 
 namespace Prefix_Suffix_Fields_Name
 {
@@ -20,9 +23,12 @@ namespace Prefix_Suffix_Fields_Name
         private Settings mySettings;
         DataTable dtEntities = null;
         DataTable dtFields = null;
+        DataTable dtFieldsUpdate = null;
+        DataTable dtFieldsUpdateResult = null;
         Dictionary<String, String> entityFields = null;
         String entitySelectedName = String.Empty;
         String entitySelectedSchemaName = String.Empty;
+        private int languageCode;
 
         public MyPluginControl()
         {
@@ -31,8 +37,6 @@ namespace Prefix_Suffix_Fields_Name
 
         private void MyPluginControl_Load(object sender, EventArgs e)
         {
-            ShowInfoNotification("This is a notification that can lead to XrmToolBox repository", new Uri("https://github.com/MscrmTools/XrmToolBox"));
-
             // Loads or creates the settings for the plugin
             if (!SettingsManager.Instance.TryLoad(GetType(), out mySettings))
             {
@@ -45,16 +49,6 @@ namespace Prefix_Suffix_Fields_Name
                 LogInfo("Settings found and loaded");
             }
         }
-
-        private void tsbClose_Click(object sender, EventArgs e)
-        {
-            CloseTool();
-        }
-
-        private void tsbSample_Click(object sender, EventArgs e)
-        {
-        }
-
 
         /// <summary>
         /// This event occurs when the plugin is closed
@@ -88,7 +82,9 @@ namespace Prefix_Suffix_Fields_Name
 
         private void loadEntities()
         {
-            InitComponents();
+            fieldsTextSearch.Enabled = false;
+            PSTextBox.Enabled = false;
+            ProceedButton.Enabled = false;
             //searchEntity.Enabled = false;
             WorkAsync(new WorkAsyncInfo
             {
@@ -97,6 +93,11 @@ namespace Prefix_Suffix_Fields_Name
                 {
                     #region Variables
                     dtEntities = new DataTable();
+                    languageCode = Service.RetrieveMultiple(new QueryExpression("organization")
+                    {
+                        ColumnSet = new ColumnSet("languagecode"),
+                    }).Entities.First().GetAttributeValue<int>("languagecode");
+
                     #endregion
                     #region getEntitiesMetadata
                     RetrieveMetadataChangesResponse _allEntitiesResp = PreffixSuffixFieldsNameManager.GetEntitiesMetadat(Service);
@@ -138,17 +139,19 @@ namespace Prefix_Suffix_Fields_Name
                         #region Set Retrieved Data in the Data Grid View
                         PreffixSuffixFieldsNameManager.SetEntitiesGridViewHeaders(result, entityDataGridView);
                         #endregion
-                        #region ManageComponenetVisibility
-                        //searchEntity.Enabled = true;
-                        //analyseButton.Enabled = true;
+                        #region ManageComponenets
+                        entityTextSearch.Enabled = true;
+                        loadFieldsButton.Enabled = true;
+                        fieldsUpdateDataGridView.DataSource = null;
+                        updateFieldsResultDataGridView.DataSource = null;
+                        fieldsDataGridView.DataSource = null;
+                        PSTextBox.Text = String.Empty;
+                        fieldsTextSearch.Text = "Search";
+                        entityTextSearch.Text = "Search";
                         #endregion
                     }
                 }
             });
-        }
-
-        private void InitComponents()
-        {
         }
 
         private void loadFieldsButton_Click(object sender, EventArgs e)
@@ -169,10 +172,6 @@ namespace Prefix_Suffix_Fields_Name
 
         private void GetEntityFields()
         {
-            //fieldTypeCombobox.Enabled = false;
-            //buttonExport.Enabled = false;
-            //analyseButton.Enabled = false;
-            //DisplayPercentageCheckbox.Enabled = false;
             WorkAsync(new WorkAsyncInfo
             {
                 Message = "Analysing ...",
@@ -184,7 +183,6 @@ namespace Prefix_Suffix_Fields_Name
                         entityFields = PreffixSuffixFieldsNameManager.getEntityFields(Service, entitySelectedSchemaName, worker);
 
                         #region Entity Fiels Metadata  Set
-                        dtFields.Columns.Add("Select", typeof(bool));
                         dtFields.Columns.Add("DisplayName", typeof(string));
                         dtFields.Columns.Add("SchemaName", typeof(string));
                         #endregion
@@ -192,7 +190,6 @@ namespace Prefix_Suffix_Fields_Name
                         foreach (var item in entityFields)
                         {
                             DataRow row = dtFields.NewRow();
-                            row["Select"] = false;
                             row["DisplayName"] = item.Value;
                             row["SchemaName"] = item.Key;
 
@@ -222,6 +219,9 @@ namespace Prefix_Suffix_Fields_Name
                     {
                         PreffixSuffixFieldsNameManager.SetFieldsGridViewHeaders(result, fieldsDataGridView);
                     }
+                    fieldsTextSearch.Enabled = true;
+                    PSTextBox.Enabled = true;
+                    ProceedButton.Enabled = true;
                 }
             });
         }
@@ -243,18 +243,97 @@ namespace Prefix_Suffix_Fields_Name
 
         private void ProceedButton_Click(object sender, EventArgs e)
         {
-            var entityName = String.Empty;
-            var text = PSTextBox.Text;
-            Dictionary <String, String> selectedFields = PreffixSuffixFieldsNameManager.SelectedFields(fieldsDataGridView.Rows);
-            PreffixSuffixFieldsNameManager.UpdateNames(Service, text, preffixButton.Checked ? "Preffix" : "Suffix", AddButton.Checked ? "Add":"Remove", selectedFields, entitySelectedSchemaName);
+
+            if (PSTextBox.Text == String.Empty)
+                MessageBox.Show("Please Enter a value to Preffix/Suffix With", "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            else
+                ExecuteMethod(ProceedButtonFunction);
+        }
+
+        private void ProceedButtonFunction() {
+            WorkAsync(new WorkAsyncInfo
+            {
+                Message = "Processing ...",
+                Work = (worker, args) =>
+                {
+                    try
+                    {
+                        var text = PSTextBox.Text;
+                        var preffixSuffix = preffixButton.Checked;
+                        var addDelete = AddButton.Checked;
+
+                        Dictionary<String, String> selectedFields = PreffixSuffixFieldsNameManager.SelectedFields(fieldsUpdateDataGridView.Rows);
+                        PreffixSuffixFieldsNameManager.UpdateNames(Service, text, preffixSuffix ? "Preffix" : "Suffix", addDelete ? "Add" : "Remove", selectedFields, entitySelectedSchemaName, languageCode);
+                        Dictionary<String, String> entityFieldsUpdate = UpdatedFieldsValues(Service, selectedFields, entitySelectedSchemaName);
+
+                        dtFieldsUpdateResult = new DataTable();
+                        dtFieldsUpdateResult.Columns.Add("DisplayName", typeof(string));
+                        dtFieldsUpdateResult.Columns.Add("SchemaName", typeof(string));
+                        dtFieldsUpdateResult.Columns.Add("isUpdated", typeof(string));
+
+
+                        entityFieldsUpdate = entityFieldsUpdate.Where(x => selectedFields.ContainsKey(x.Key))
+                                             .ToDictionary(x => x.Key, x => x.Value);
+
+                        foreach (var item in entityFieldsUpdate)
+                        {
+                            DataRow row = dtFieldsUpdateResult.NewRow();
+                            row["DisplayName"] = item.Value;
+                            row["SchemaName"] = item.Key;
+                            row["isUpdated"] = entityFieldsUpdate[item.Key] == selectedFields[item.Key] ? "NO" : "YES";
+
+                            dtFieldsUpdateResult.Rows.Add(row);
+                        }
+
+
+                        args.Result = dtFieldsUpdateResult;
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message, "Warning");
+                    }
+                },
+                ProgressChanged = e =>
+                {
+                    // If progress has to be notified to user, use the following method:
+                    SetWorkingMessage(e.UserState.ToString());
+                },
+                PostWorkCallBack = (args) =>
+                {
+                    PreffixSuffixFieldsNameManager.SetFieldsGridViewHeaders((DataTable)args.Result, updateFieldsResultDataGridView, true);
+                    loadFieldsButton.PerformClick();
+                    dtFieldsUpdate.Clear();
+                }
+            });
+
         }
 
         private void entityTextSearch_TextChanged(object sender, EventArgs e)
         {
-            FilterDate(entityDataGridView, entityTextSearch, dtEntities);
+            FilterEntities(entityDataGridView, entityTextSearch, dtEntities);
         }
 
-        private void FilterDate(DataGridView dataGrid, TextBox textBoxName, DataTable dataTable)
+        private Dictionary<String, String> UpdatedFieldsValues(IOrganizationService service, Dictionary<String,String> fields, String entityName) {
+            Dictionary<String, String> fieldsUpdate = new Dictionary<string, string>();
+            string fieldsRequest = String.Empty;
+            foreach (String field in fields.Keys)
+            {
+                fieldsRequest += field;
+            }
+
+            RetrieveEntityRequest retrieveEntityRequest = new RetrieveEntityRequest
+            {
+                EntityFilters = EntityFilters.Attributes,
+                LogicalName = entityName,
+                RetrieveAsIfPublished = true
+            };
+
+            RetrieveEntityResponse retrieveEntityResponse = (RetrieveEntityResponse)service.Execute(retrieveEntityRequest);
+            PreffixSuffixFieldsNameManager.formatList(retrieveEntityResponse, fieldsUpdate);
+            return fieldsUpdate;
+        }
+
+        private void FilterEntities(DataGridView dataGrid, TextBox textBoxName, DataTable dataTable)
         {
 
             if (textBoxName.Text == "" && dataTable.Rows.Count > 0 && dataGrid.Rows.Count != dataTable.Rows.Count)
@@ -279,6 +358,32 @@ namespace Prefix_Suffix_Fields_Name
             }
         }
 
+
+        private void FilterFields(DataGridView dataGrid, TextBox textBoxName, DataTable dataTable)
+        {
+
+            if (textBoxName.Text == "" && dataTable.Rows.Count > 0 && dataGrid.Rows.Count != dataTable.Rows.Count)
+            {
+                PreffixSuffixFieldsNameManager.SetFieldsGridViewHeaders(dataTable, dataGrid);
+            }
+            else if (textBoxName.Text != "Search" && textBoxName.Text != "" && dataTable.Rows.Count > 0)
+            {
+                string searchValue = textBoxName.Text.ToLower();
+                try
+                {
+                    DataRow[] filtered = dataTable.Select("DisplayName LIKE '%" + searchValue + "%' OR SchemaName LIKE '%" + searchValue + "%'");
+                    if (filtered.Count() > 0)
+                    {
+                        PreffixSuffixFieldsNameManager.SetFieldsGridViewHeaders(filtered.CopyToDataTable(), dataGrid);
+                    }
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Invalid Search Character. Please do not use ' [ ] within searches.");
+                }
+            }
+        }
+
         private void entityTextSearch_Click(object sender, EventArgs e)
         {
             if (entityTextSearch.Text == "Search")
@@ -289,15 +394,103 @@ namespace Prefix_Suffix_Fields_Name
 
         private void fieldsTextSearch_TextChanged(object sender, EventArgs e)
         {
-            FilterDate(fieldsDataGridView, fieldsTextSearch, dtFields);
+            FilterFields(fieldsDataGridView, fieldsTextSearch, dtFields);
         }
 
         private void fieldsTextSearch_Click(object sender, EventArgs e)
         {
             if (fieldsTextSearch.Text == "Search")
             {
-                entityTextSearch.Clear();
+                fieldsTextSearch.Clear();
             }
         }
+
+        private void AddFieldsToGridToBeUpdated()
+        {
+            if (dtFieldsUpdate == null)
+            {
+                dtFieldsUpdate = new DataTable();
+                #region Entity Fiels Metadata  Set
+                dtFieldsUpdate.Columns.Add("DisplayName", typeof(string));
+                dtFieldsUpdate.Columns.Add("SchemaName", typeof(string));
+                #endregion
+            }
+            int selectedrowindex = fieldsDataGridView.SelectedCells[0].RowIndex;
+            DataGridViewRow selectedRow = fieldsDataGridView.Rows[selectedrowindex];
+            Boolean alreadyExiste = false;
+            foreach (DataGridViewRow row in fieldsUpdateDataGridView.Rows)
+            {
+                if (row.Cells["SchemaName"].Value == selectedRow.Cells["SchemaName"].Value) {
+                    alreadyExiste = true;
+                }
+            }
+            if (!alreadyExiste) {
+                DataRow newRow = dtFieldsUpdate.NewRow();
+                newRow["DisplayName"] = selectedRow.Cells["DisplayName"].Value;
+                newRow["SchemaName"] = selectedRow.Cells["SchemaName"].Value;
+
+                dtFieldsUpdate.Rows.Add(newRow);
+            }
+
+            PreffixSuffixFieldsNameManager.SetFieldsGridViewHeaders(dtFieldsUpdate, fieldsUpdateDataGridView);
+        }
+
+        private void fieldsDataGridView_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            AddFieldsToGridToBeUpdated();
+        }
+
+        private void fieldsUpdateDataGridView_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (this.fieldsUpdateDataGridView.SelectedRows.Count > 0)
+            {
+                fieldsUpdateDataGridView.Rows.RemoveAt(this.fieldsUpdateDataGridView.SelectedRows[0].Index);
+            }
+        }
+
+        private void updateFieldsResultDataGridView_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            DataGridView dgv = sender as DataGridView;
+
+            if (dgv.Columns[e.ColumnIndex].Name.Equals("isUpdated"))
+            {
+                if (e.Value != null && e.Value.ToString().Trim() == "YES")
+                {
+                    dgv.Rows[e.RowIndex].Cells["isUpdated"].Style.BackColor = Color.Green;
+                }
+                else
+                {
+                    dgv.Rows[e.RowIndex].Cells["isUpdated"].Style.BackColor = Color.Red;
+                }
+            }
+        }
+
+        private void HelpButton_Click(object sender, EventArgs e)
+        {
+            string message = "";
+
+            message += "1. Click on Load Entities to load all entities in your organization";
+            message += Environment.NewLine;
+            message += "2. After selection an entity, click on Load Fields";
+            message += Environment.NewLine;
+            message += "3. Double click on the fields you want to update, each field you select will be added to the grid on right top";
+            message += Environment.NewLine;
+            message += "4. Select the type of update you want Preffix/Suffix and Add/Delete";
+            message += Environment.NewLine;
+            message += "5. Set the text you want to add to the selected fields display name, and click on Proceed";
+            message += Environment.NewLine;
+            message += "6. After updating the display name of the selected fields, the grid right bottom display the new fields with display name, and a status if the field is updated or not";
+            message += Environment.NewLine;
+            message += Environment.NewLine;
+            message += "If you have any issues please log them via GitHub and/or contact me at hamzamraoui11@gmail.com";
+
+            MessageBox.Show(message);
+        }
+
+        private void byButton_Click(object sender, EventArgs e)
+        {
+            Process.Start("https://www.linkedin.com/in/hamza-amraoui/");
+        }
+
     }
 }

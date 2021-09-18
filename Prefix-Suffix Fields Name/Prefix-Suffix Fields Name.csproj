@@ -132,6 +132,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Manager\Classes.cs" />
     <Compile Include="Manager\PreffixSuffixFieldsNameManager.cs" />
     <Compile Include="MyPlugin.cs" />
     <Compile Include="MyPluginControl.cs">
@@ -141,6 +142,11 @@
       <DependentUpon>MyPluginControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Settings.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -151,6 +157,22 @@
     <EmbeddedResource Include="MyPluginControl.resx">
       <DependentUpon>MyPluginControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\help.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Export.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Analyse.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RunAnalyse.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -40,7 +40,7 @@ namespace Prefix_Suffix_Fields_Name
         public static void SetEntitiesGridViewHeaders(DataTable dt, DataGridView entityGridView)
         {
             entityGridView.DataSource = dt;
-            entityGridView.Sort(entityGridView.Columns[1], ListSortDirection.Descending);
+            entityGridView.Sort(entityGridView.Columns[0], ListSortDirection.Ascending);
             entityGridView.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Regular);
             entityGridView.Columns[0].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
             entityGridView.Columns[0].DefaultCellStyle.Alignment = DataGridViewContentAlignment.BottomCenter;
@@ -51,19 +51,29 @@ namespace Prefix_Suffix_Fields_Name
             entityGridView.Columns[2].HeaderText = "Schema Name";
         }
 
-
         public static void SetFieldsGridViewHeaders(DataTable dt, DataGridView fieldDataGridView)
         {
             fieldDataGridView.DataSource = dt;
-            fieldDataGridView.Sort(fieldDataGridView.Columns[1], ListSortDirection.Ascending);
+            fieldDataGridView.Sort(fieldDataGridView.Columns[0], ListSortDirection.Ascending);
             fieldDataGridView.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Regular);
-            fieldDataGridView.Columns[0].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            fieldDataGridView.Columns[0].DefaultCellStyle.Alignment = DataGridViewContentAlignment.BottomCenter;
-            fieldDataGridView.Columns[0].HeaderText = String.Empty;
+            fieldDataGridView.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            fieldDataGridView.Columns[0].HeaderText = "DisplayName";
             fieldDataGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            fieldDataGridView.Columns[1].HeaderText = "DisplayName";
-            fieldDataGridView.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            fieldDataGridView.Columns[2].HeaderText = "SchemaName";
+            fieldDataGridView.Columns[1].HeaderText = "SchemaName";
+        }
+        public static void SetFieldsGridViewHeaders(DataTable dt, DataGridView fieldDataGridView, bool isForResult=false)
+        {
+            fieldDataGridView.DataSource = dt;
+            fieldDataGridView.Sort(fieldDataGridView.Columns[0], ListSortDirection.Ascending);
+            fieldDataGridView.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Regular);
+            fieldDataGridView.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            fieldDataGridView.Columns[0].HeaderText = "DisplayName";
+            fieldDataGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            fieldDataGridView.Columns[1].HeaderText = "SchemaName";
+            if (isForResult) {
+                fieldDataGridView.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                fieldDataGridView.Columns[2].HeaderText = "isUpdated";
+            }
         }
 
         public static Dictionary<String, String> getEntityFields(IOrganizationService service, String entityTechnicalName, BackgroundWorker worker)
@@ -84,7 +94,7 @@ namespace Prefix_Suffix_Fields_Name
             return _fields;
         }
 
-        private static void formatList(RetrieveEntityResponse _metadata, Dictionary<String,String> _fields)
+        public static void formatList(RetrieveEntityResponse _metadata, Dictionary<String,String> _fields)
         {
             var attributes = FilterAttributes(_metadata.EntityMetadata.Attributes);
             foreach (var field in attributes)
@@ -101,6 +111,7 @@ namespace Prefix_Suffix_Fields_Name
                             && a.AttributeType.Value != AttributeTypeCode.PartyList
                             && a.IsValidForRead.Value
                             && a.LogicalName.IndexOf("composite") < 0
+                            && a.IsRenameable.Value
                             //&& a.IsValidForForm.Value
                             //&& ((BooleanManagedProperty)a.IsRenameable).Value ==  true
                             ).OrderBy(a => a.LogicalName);
@@ -126,27 +137,21 @@ namespace Prefix_Suffix_Fields_Name
 
         public static Dictionary<String, String> SelectedFields(DataGridViewRowCollection rows)
         {
+            //TechninaclName,DisplayName
             Dictionary<String, String> selectedFields = new Dictionary<String, String>();
             foreach (DataGridViewRow row in rows)
             {
-                var cell = row.Cells[0];
-                if (cell != null)
-                {
-                    if ((bool)cell.Value != null && (bool)cell.Value == true)
-                    {
-                        selectedFields.Add(row.Cells[2].Value.ToString(), row.Cells[1].Value.ToString());
-                    }
-                }
+                selectedFields.Add(row.Cells[1].Value.ToString(), row.Cells[0].Value.ToString());
             }
             return selectedFields;
         }
 
 
-        public static void UpdateNames(IOrganizationService service, String text, String preffixSuffix, String addRemove, Dictionary<String, String> fields, String entityName) {
+        public static void UpdateNames(IOrganizationService service, String text, String preffixSuffix, String addRemove, Dictionary<String, String> fields, String entityName, int languageCode) {
             Dictionary<String, String> UpdatedFields = FormatedFieldsName(text, preffixSuffix, addRemove, fields);
             foreach (var field in UpdatedFields.Keys)
             {
-                UpdateRecordName(service, field, UpdatedFields[field], entityName);
+                UpdateRecordName(service, field, UpdatedFields[field], entityName, languageCode);
             }
         }
 
@@ -184,19 +189,26 @@ namespace Prefix_Suffix_Fields_Name
             return fieldsUpdate;
         }
 
-        private static void UpdateRecordName(IOrganizationService service , String schemaName, String displayName, String entityName) {
-            AttributeMetadata retrievedAttributeMetadata = new AttributeMetadata() {
-                DisplayName = new Label(displayName, 1033),
-                LogicalName = schemaName
-            };
-            UpdateAttributeRequest updateRequest = new UpdateAttributeRequest
+        private static void UpdateRecordName(IOrganizationService service , String schemaName, String displayName, String entityName, int languageCode) {
+            try
             {
-                Attribute = retrievedAttributeMetadata,
-                EntityName = entityName,
-                MergeLabels = false
-            };
+                AttributeMetadata retrievedAttributeMetadata = new AttributeMetadata()
+                {
+                    DisplayName = new Label(displayName, languageCode),
+                    LogicalName = schemaName
+                };
+                UpdateAttributeRequest updateRequest = new UpdateAttributeRequest
+                {
+                    Attribute = retrievedAttributeMetadata,
+                    EntityName = entityName,
+                    MergeLabels = false
+                };
 
-            var attributeResponse = (UpdateAttributeResponse)service.Execute(updateRequest);
+                var attributeResponse = (UpdateAttributeResponse)service.Execute(updateRequest);
+            }
+            catch
+            {
+            }
         }
     }
 }
