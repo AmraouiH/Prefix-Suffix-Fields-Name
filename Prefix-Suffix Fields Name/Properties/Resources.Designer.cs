@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Prefix_Suffix_Components_Name.Properties {
+namespace Bulk_Prefix_Suffix_Attribues_Name.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace Prefix_Suffix_Components_Name.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Prefix_Suffix_Components_Name.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Bulk_Prefix_Suffix_Attribues_Name.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

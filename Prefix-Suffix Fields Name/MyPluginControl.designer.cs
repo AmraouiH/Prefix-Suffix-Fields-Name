@@ -122,7 +122,7 @@
             // loadEntitiesButto
             // 
             this.loadEntitiesButto.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.loadEntitiesButto.Image = global::Prefix_Suffix_Components_Name.Properties.Resources.Export;
+            this.loadEntitiesButto.Image = global::Bulk_Prefix_Suffix_Attribues_Name.Properties.Resources.Export;
             this.loadEntitiesButto.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.loadEntitiesButto.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.loadEntitiesButto.Name = "loadEntitiesButto";
@@ -135,7 +135,7 @@
             // 
             this.loadFieldsButton.Enabled = false;
             this.loadFieldsButton.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.loadFieldsButton.Image = global::Prefix_Suffix_Components_Name.Properties.Resources.Analyse;
+            this.loadFieldsButton.Image = global::Bulk_Prefix_Suffix_Attribues_Name.Properties.Resources.Analyse;
             this.loadFieldsButton.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.loadFieldsButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.loadFieldsButton.Name = "loadFieldsButton";
@@ -155,7 +155,7 @@
             // HelpButton
             // 
             this.HelpButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.HelpButton.Image = global::Prefix_Suffix_Components_Name.Properties.Resources.help;
+            this.HelpButton.Image = global::Bulk_Prefix_Suffix_Attribues_Name.Properties.Resources.help;
             this.HelpButton.ImageScaling = System.Windows.Forms.ToolStripItemImageScaling.None;
             this.HelpButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.HelpButton.Name = "HelpButton";
@@ -443,7 +443,7 @@
             this.ProceedButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ProceedButton.Enabled = false;
             this.ProceedButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ProceedButton.Image = global::Prefix_Suffix_Components_Name.Properties.Resources.RunAnalyse;
+            this.ProceedButton.Image = global::Bulk_Prefix_Suffix_Attribues_Name.Properties.Resources.RunAnalyse;
             this.ProceedButton.Location = new System.Drawing.Point(608, 6);
             this.ProceedButton.Margin = new System.Windows.Forms.Padding(6);
             this.ProceedButton.Name = "ProceedButton";
