@@ -11,5 +11,6 @@ namespace Prefix_Suffix_Components_Name.Manager
         public String displayName;
         public String schemaName;
         public String type;
+        public String IsSearchable;
     }
 }

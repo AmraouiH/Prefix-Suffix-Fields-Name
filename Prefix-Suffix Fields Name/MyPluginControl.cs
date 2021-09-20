@@ -15,6 +15,7 @@ using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using System.Diagnostics;
 using Microsoft.Crm.Sdk.Messages;
+using Prefix_Suffix_Components_Name.Manager;
 
 namespace Prefix_Suffix_Fields_Name
 {
@@ -25,10 +26,12 @@ namespace Prefix_Suffix_Fields_Name
         DataTable dtFields = null;
         DataTable dtFieldsUpdate = null;
         DataTable dtFieldsUpdateResult = null;
-        Dictionary<String, String> entityFields = null;
+        //Dictionary<String, String> entityFields = null;
+        List<Field> entityFields = null;
         String entitySelectedName = String.Empty;
         String entitySelectedSchemaName = String.Empty;
         private int languageCode;
+        private int isSearchable;
 
         public MyPluginControl()
         {
@@ -183,15 +186,20 @@ namespace Prefix_Suffix_Fields_Name
                         entityFields = PreffixSuffixFieldsNameManager.getEntityFields(Service, entitySelectedSchemaName, worker);
 
                         #region Entity Fiels Metadata  Set
-                        dtFields.Columns.Add("DisplayName", typeof(string));
-                        dtFields.Columns.Add("SchemaName", typeof(string));
+                        dtFields.Columns.Add("Display Name", typeof(string));
+                        dtFields.Columns.Add("Schema Name", typeof(string));
+                        dtFields.Columns.Add("Type", typeof(string));
+                        dtFields.Columns.Add("IsSearchable", typeof(string));
+
                         #endregion
 
                         foreach (var item in entityFields)
                         {
                             DataRow row = dtFields.NewRow();
-                            row["DisplayName"] = item.Value;
-                            row["SchemaName"] = item.Key;
+                            row["Display Name"] = item.displayName;
+                            row["Schema Name"] = item.schemaName;
+                            row["Type"] = item.type;
+                            row["IsSearchable"] = item.IsSearchable;
 
                             dtFields.Rows.Add(row);
                         }
@@ -222,6 +230,8 @@ namespace Prefix_Suffix_Fields_Name
                     fieldsTextSearch.Enabled = true;
                     PSTextBox.Enabled = true;
                     ProceedButton.Enabled = true;
+                    searchable.Enabled = true;
+                    searchable.SelectedIndex = 1;
                 }
             });
         }
@@ -236,7 +246,6 @@ namespace Prefix_Suffix_Fields_Name
                         continue;
                     row.Cells["Analyse"].Value = false;
                 }
-
                 this.entityDataGridView.Rows[e.RowIndex].Cells["Analyse"].Value = !(bool)entityDataGridView.Rows[e.RowIndex].Cells["Analyse"].Value;
             }
         }
@@ -251,6 +260,8 @@ namespace Prefix_Suffix_Fields_Name
         }
 
         private void ProceedButtonFunction() {
+            isSearchable = searchable.SelectedIndex;
+
             WorkAsync(new WorkAsyncInfo
             {
                 Message = "Processing ...",
@@ -263,28 +274,33 @@ namespace Prefix_Suffix_Fields_Name
                         var addDelete = AddButton.Checked;
 
                         Dictionary<String, String> selectedFields = PreffixSuffixFieldsNameManager.SelectedFields(fieldsUpdateDataGridView.Rows);
-                        PreffixSuffixFieldsNameManager.UpdateNames(Service, text, preffixSuffix ? "Preffix" : "Suffix", addDelete ? "Add" : "Remove", selectedFields, entitySelectedSchemaName, languageCode);
-                        Dictionary<String, String> entityFieldsUpdate = UpdatedFieldsValues(Service, selectedFields, entitySelectedSchemaName);
+                        PreffixSuffixFieldsNameManager.UpdateAttributes(Service, text, preffixSuffix ? "Preffix" : "Suffix", addDelete ? "Add" : "Remove", isSearchable, selectedFields, entitySelectedSchemaName, languageCode, worker);
+                        List<Field> entityUpdatedFields = UpdatedFieldsValues(Service, selectedFields, entitySelectedSchemaName);
+                        worker.ReportProgress(0, "Check The Update Result ...");
 
                         dtFieldsUpdateResult = new DataTable();
                         dtFieldsUpdateResult.Columns.Add("DisplayName", typeof(string));
                         dtFieldsUpdateResult.Columns.Add("SchemaName", typeof(string));
+                        dtFieldsUpdateResult.Columns.Add("Type", typeof(string));
+                        dtFieldsUpdateResult.Columns.Add("isSearchable", typeof(string));
                         dtFieldsUpdateResult.Columns.Add("isUpdated", typeof(string));
 
 
-                        entityFieldsUpdate = entityFieldsUpdate.Where(x => selectedFields.ContainsKey(x.Key))
-                                             .ToDictionary(x => x.Key, x => x.Value);
+                        entityUpdatedFields = entityUpdatedFields.Where(x => selectedFields.ContainsKey(x.schemaName)).ToList<Field>();
 
-                        foreach (var item in entityFieldsUpdate)
+
+                        foreach (var item in entityUpdatedFields)
                         {
                             DataRow row = dtFieldsUpdateResult.NewRow();
-                            row["DisplayName"] = item.Value;
-                            row["SchemaName"] = item.Key;
-                            row["isUpdated"] = entityFieldsUpdate[item.Key] == selectedFields[item.Key] ? "NO" : "YES";
+                            row["DisplayName"] = item.displayName;
+                            row["SchemaName"] = item.schemaName;
+                            row["Type"] = item.type;
+                            row["isSearchable"] = item.IsSearchable;
+                            row["isUpdated"] = item.displayName == selectedFields[item.schemaName] ? "NO" : "YES";
 
                             dtFieldsUpdateResult.Rows.Add(row);
                         }
-
+                        worker.ReportProgress(0, "Processing ...");
 
                         args.Result = dtFieldsUpdateResult;
                     }
@@ -313,8 +329,9 @@ namespace Prefix_Suffix_Fields_Name
             FilterEntities(entityDataGridView, entityTextSearch, dtEntities);
         }
 
-        private Dictionary<String, String> UpdatedFieldsValues(IOrganizationService service, Dictionary<String,String> fields, String entityName) {
-            Dictionary<String, String> fieldsUpdate = new Dictionary<string, string>();
+        private List<Field> UpdatedFieldsValues(IOrganizationService service, Dictionary<String,String> fields, String entityName) {
+            //Dictionary<String, String> fieldsUpdate = new Dictionary<string, string>();
+            List<Field> fieldsUpdate = new List<Field>();
             string fieldsRequest = String.Empty;
             foreach (String field in fields.Keys)
             {
@@ -371,7 +388,7 @@ namespace Prefix_Suffix_Fields_Name
                 string searchValue = textBoxName.Text.ToLower();
                 try
                 {
-                    DataRow[] filtered = dataTable.Select("DisplayName LIKE '%" + searchValue + "%' OR SchemaName LIKE '%" + searchValue + "%'");
+                    DataRow[] filtered = dataTable.Select("[Display Name] LIKE '%" + searchValue + "%' OR [Schema Name] LIKE '%" + searchValue + "%'");
                     if (filtered.Count() > 0)
                     {
                         PreffixSuffixFieldsNameManager.SetFieldsGridViewHeaders(filtered.CopyToDataTable(), dataGrid);
@@ -411,8 +428,11 @@ namespace Prefix_Suffix_Fields_Name
             {
                 dtFieldsUpdate = new DataTable();
                 #region Entity Fiels Metadata  Set
-                dtFieldsUpdate.Columns.Add("DisplayName", typeof(string));
-                dtFieldsUpdate.Columns.Add("SchemaName", typeof(string));
+                dtFieldsUpdate.Columns.Add("Display Name", typeof(string));
+                dtFieldsUpdate.Columns.Add("Schema Name", typeof(string));
+                dtFieldsUpdate.Columns.Add("Type", typeof(string));
+                dtFieldsUpdate.Columns.Add("isSearchable", typeof(string));
+
                 #endregion
             }
             int selectedrowindex = fieldsDataGridView.SelectedCells[0].RowIndex;
@@ -420,19 +440,22 @@ namespace Prefix_Suffix_Fields_Name
             Boolean alreadyExiste = false;
             foreach (DataGridViewRow row in fieldsUpdateDataGridView.Rows)
             {
-                if (row.Cells["SchemaName"].Value == selectedRow.Cells["SchemaName"].Value) {
+                if (row.Cells["Schema Name"].Value == selectedRow.Cells["Schema Name"].Value) {
                     alreadyExiste = true;
                 }
             }
             if (!alreadyExiste) {
                 DataRow newRow = dtFieldsUpdate.NewRow();
-                newRow["DisplayName"] = selectedRow.Cells["DisplayName"].Value;
-                newRow["SchemaName"] = selectedRow.Cells["SchemaName"].Value;
+                newRow["Display Name"] = selectedRow.Cells["Display Name"].Value;
+                newRow["Schema Name"] = selectedRow.Cells["Schema Name"].Value;
+                newRow["Type"] = selectedRow.Cells["Type"].Value;
+                newRow["isSearchable"] = selectedRow.Cells["isSearchable"].Value;
+
 
                 dtFieldsUpdate.Rows.Add(newRow);
             }
 
-            PreffixSuffixFieldsNameManager.SetFieldsGridViewHeaders(dtFieldsUpdate, fieldsUpdateDataGridView);
+            PreffixSuffixFieldsNameManager.SetFieldsGridViewHeaders(dtFieldsUpdate, fieldsUpdateDataGridView, false);
         }
 
         private void fieldsDataGridView_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)

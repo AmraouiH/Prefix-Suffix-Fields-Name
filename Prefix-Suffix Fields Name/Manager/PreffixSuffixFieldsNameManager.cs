@@ -3,6 +3,7 @@ using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Metadata.Query;
 using Microsoft.Xrm.Sdk.Query;
+using Prefix_Suffix_Components_Name.Manager;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -40,6 +41,7 @@ namespace Prefix_Suffix_Fields_Name
         public static void SetEntitiesGridViewHeaders(DataTable dt, DataGridView entityGridView)
         {
             entityGridView.DataSource = dt;
+            entityGridView.RowHeadersVisible = false;
             entityGridView.Sort(entityGridView.Columns[0], ListSortDirection.Ascending);
             entityGridView.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Regular);
             entityGridView.Columns[0].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -54,31 +56,43 @@ namespace Prefix_Suffix_Fields_Name
         public static void SetFieldsGridViewHeaders(DataTable dt, DataGridView fieldDataGridView)
         {
             fieldDataGridView.DataSource = dt;
+            fieldDataGridView.RowHeadersVisible = false;
             fieldDataGridView.Sort(fieldDataGridView.Columns[0], ListSortDirection.Ascending);
             fieldDataGridView.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Regular);
             fieldDataGridView.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            fieldDataGridView.Columns[0].HeaderText = "DisplayName";
+            fieldDataGridView.Columns[0].HeaderText = "Display Name";
             fieldDataGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            fieldDataGridView.Columns[1].HeaderText = "SchemaName";
+            fieldDataGridView.Columns[1].HeaderText = "Schema Name";
+            fieldDataGridView.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            fieldDataGridView.Columns[2].HeaderText = "Type";
+            fieldDataGridView.Columns[3].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            fieldDataGridView.Columns[3].HeaderText = "IsSearchable";
+            
         }
         public static void SetFieldsGridViewHeaders(DataTable dt, DataGridView fieldDataGridView, bool isForResult=false)
         {
             fieldDataGridView.DataSource = dt;
+            fieldDataGridView.RowHeadersVisible = false;
             fieldDataGridView.Sort(fieldDataGridView.Columns[0], ListSortDirection.Ascending);
             fieldDataGridView.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Regular);
             fieldDataGridView.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             fieldDataGridView.Columns[0].HeaderText = "DisplayName";
             fieldDataGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             fieldDataGridView.Columns[1].HeaderText = "SchemaName";
+            fieldDataGridView.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            fieldDataGridView.Columns[2].HeaderText = "Type";
+            fieldDataGridView.Columns[3].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            fieldDataGridView.Columns[3].HeaderText = "isSearchable";
             if (isForResult) {
-                fieldDataGridView.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-                fieldDataGridView.Columns[2].HeaderText = "isUpdated";
+                fieldDataGridView.Columns[4].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                fieldDataGridView.Columns[4].HeaderText = "isUpdated";
             }
         }
 
-        public static Dictionary<String, String> getEntityFields(IOrganizationService service, String entityTechnicalName, BackgroundWorker worker)
+        public static List<Field> getEntityFields(IOrganizationService service, String entityTechnicalName, BackgroundWorker worker)
         {
-            Dictionary<String, String> _fields = new Dictionary<string, string>();
+            //Dictionary<String, String> _fields = new Dictionary<string, string>();
+            List<Field> _fields = new List<Field>();
             RetrieveEntityRequest retrieveBankAccountEntityRequest = new RetrieveEntityRequest
             {
                 EntityFilters = EntityFilters.Attributes,
@@ -94,12 +108,18 @@ namespace Prefix_Suffix_Fields_Name
             return _fields;
         }
 
-        public static void formatList(RetrieveEntityResponse _metadata, Dictionary<String,String> _fields)
+        public static void formatList(RetrieveEntityResponse _metadata, List<Field> _fields)
         {
             var attributes = FilterAttributes(_metadata.EntityMetadata.Attributes);
             foreach (var field in attributes)
             {
-                    _fields.Add(field.LogicalName, field.DisplayName.UserLocalizedLabel != null ? field.DisplayName.UserLocalizedLabel.Label : @"N/A");
+                //_fields.Add(field.LogicalName, field.DisplayName.UserLocalizedLabel != null ? field.DisplayName.UserLocalizedLabel.Label : @"N/A");
+                Field attr = new Field();
+                attr.displayName = field.DisplayName.UserLocalizedLabel != null ? field.DisplayName.UserLocalizedLabel.Label : @"N/A";
+                attr.schemaName = field.LogicalName;
+                attr.type = field.AttributeType.Value.ToString();
+                attr.IsSearchable = field.IsValidForAdvancedFind.Value.ToString();
+                _fields.Add(attr);
             }
         }
 
@@ -147,12 +167,9 @@ namespace Prefix_Suffix_Fields_Name
         }
 
 
-        public static void UpdateNames(IOrganizationService service, String text, String preffixSuffix, String addRemove, Dictionary<String, String> fields, String entityName, int languageCode) {
+        public static void UpdateAttributes(IOrganizationService service, String text, String preffixSuffix, String addRemove, int searchable, Dictionary<String, String> fields, String entityName, int languageCode, BackgroundWorker worker) {
             Dictionary<String, String> UpdatedFields = FormatedFieldsName(text, preffixSuffix, addRemove, fields);
-            foreach (var field in UpdatedFields.Keys)
-            {
-                UpdateRecordName(service, field, UpdatedFields[field], entityName, languageCode);
-            }
+            UpdateAttribute(service, entityName, searchable, languageCode, UpdatedFields, worker);
         }
 
 
@@ -189,26 +206,45 @@ namespace Prefix_Suffix_Fields_Name
             return fieldsUpdate;
         }
 
-        private static void UpdateRecordName(IOrganizationService service , String schemaName, String displayName, String entityName, int languageCode) {
-            try
+        private static void UpdateAttribute(IOrganizationService service , String entityName, int searchable, int languageCode,  Dictionary<String, String> UpdatedFields, BackgroundWorker worker) {
+            // Create an ExecuteMultipleRequest object.
+            worker.ReportProgress(0, "Preparing Update Request ...");
+            var multipleRequest = new ExecuteMultipleRequest()
             {
-                AttributeMetadata retrievedAttributeMetadata = new AttributeMetadata()
+                Settings = new ExecuteMultipleSettings()
                 {
-                    DisplayName = new Label(displayName, languageCode),
-                    LogicalName = schemaName
-                };
-                UpdateAttributeRequest updateRequest = new UpdateAttributeRequest
-                {
-                    Attribute = retrievedAttributeMetadata,
-                    EntityName = entityName,
-                    MergeLabels = false
-                };
+                    ContinueOnError = true,
+                    ReturnResponses = false
+                },
+                Requests = new OrganizationRequestCollection()
+            };
 
-                var attributeResponse = (UpdateAttributeResponse)service.Execute(updateRequest);
-            }
-            catch
+            foreach (var field in UpdatedFields.Keys)
             {
+                try
+                {
+                    AttributeMetadata retrievedAttributeMetadata = new AttributeMetadata();
+                    retrievedAttributeMetadata.DisplayName = new Label(UpdatedFields[field], languageCode);
+                    retrievedAttributeMetadata.LogicalName = field;
+                    if (searchable == 0)//Nothing to update when user select Non
+                    {
+                        retrievedAttributeMetadata.IsValidForAdvancedFind = new BooleanManagedProperty(false);
+                    }
+
+                    UpdateAttributeRequest updateRequest = new UpdateAttributeRequest
+                    {
+                        Attribute = retrievedAttributeMetadata,
+                        EntityName = entityName,
+                        MergeLabels = false
+                    };
+                    multipleRequest.Requests.Add(updateRequest);
+                }
+                catch
+                {
+                }
             }
+            worker.ReportProgress(0, "Updating Attributes Display Name ...");
+            service.Execute(multipleRequest);
         }
     }
 }
