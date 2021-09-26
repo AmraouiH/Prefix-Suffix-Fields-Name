@@ -441,18 +441,17 @@
             // 
             // ProceedButton
             // 
-            this.ProceedButton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.ProceedButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.ProceedButton.AutoSize = true;
             this.ProceedButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ProceedButton.Enabled = false;
             this.ProceedButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ProceedButton.Image = global::Bulk_Prefix_Suffix_Attribues_Name.Properties.Resources.RunAnalyse;
-            this.ProceedButton.Location = new System.Drawing.Point(608, 6);
-            this.ProceedButton.Margin = new System.Windows.Forms.Padding(6);
+            this.ProceedButton.Location = new System.Drawing.Point(602, 6);
+            this.ProceedButton.Margin = new System.Windows.Forms.Padding(0);
+            this.ProceedButton.MaximumSize = new System.Drawing.Size(500, 28);
             this.ProceedButton.Name = "ProceedButton";
-            this.ProceedButton.Size = new System.Drawing.Size(247, 28);
+            this.ProceedButton.Size = new System.Drawing.Size(259, 27);
             this.ProceedButton.TabIndex = 3;
             this.ProceedButton.Text = "Proceed";
             this.ProceedButton.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -479,9 +478,7 @@
             // 
             // PSTextBox
             // 
-            this.PSTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.PSTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.PSTextBox.Enabled = false;
             this.PSTextBox.Location = new System.Drawing.Point(0, 5);
             this.PSTextBox.Margin = new System.Windows.Forms.Padding(0);

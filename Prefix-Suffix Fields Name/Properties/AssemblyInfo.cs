@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Bulk Prefix/Suffix Attribues Name")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Remove Deprecated Fields Start From Tag Them")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Bulk Prefix/Suffix Attribues Name")]

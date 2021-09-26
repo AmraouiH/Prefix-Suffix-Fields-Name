@@ -492,22 +492,40 @@ namespace Prefix_Suffix_Fields_Name
         {
             string message = "";
 
-            message += "1. Click on Load Entities to load all entities in your organization";
+            message += "1. Click on Load Entities to load all entities in your organization.";
             message += Environment.NewLine;
-            message += "2. After selection an entity, click on Load Fields";
             message += Environment.NewLine;
-            message += "3. Double click on the fields you want to update, each field you select will be added to the grid on right top";
+            message += "2. After selection an entity, click on Load Fields.";
             message += Environment.NewLine;
-            message += "4. Select the type of update you want Preffix/Suffix and Add/Delete";
             message += Environment.NewLine;
-            message += "5. Set the text you want to add to the selected fields display name, and click on Proceed";
+            message += "3. Double click on the fields you want to update, each field you select will be added to the grid on right top.";
             message += Environment.NewLine;
-            message += "6. After updating the display name of the selected fields, the grid right bottom display the new fields with display name, and a status if the field is updated or not";
+            message += Environment.NewLine;
+            message += "4. Double click on the field to remove it from the list.";
+            message += Environment.NewLine;
+            message += Environment.NewLine;
+            message += "5. Select the type of update you want Prefix or Suffix and Add or Delete.";
+            message += Environment.NewLine;
+            message += Environment.NewLine;
+            message += "6. Set the text you want to add to the selected fields display name, and click on Proceed.";
+            message += Environment.NewLine;
+            message += Environment.NewLine;
+            message += "7. Set the option SET FIELDS NON SEARCHABLE to YES to disable search for the selected fields.";
+            message += Environment.NewLine;
+            message += Environment.NewLine;
+            message += "8. After updating the display name of the selected fields, the grid right bottom display the new fields with display name, and a status if the field is updated or not.";
+            message += Environment.NewLine;
             message += Environment.NewLine;
             message += Environment.NewLine;
             message += "If you have any issues please log them via GitHub and/or contact me at hamzamraoui11@gmail.com";
+            message += Environment.NewLine;
+            message += Environment.NewLine;
+            message += "Click YES/Oui for full documentation";
 
-            MessageBox.Show(message);
+            if (MessageBox.Show(message, "Help", MessageBoxButtons.YesNo, MessageBoxIcon.None) == DialogResult.Yes)
+            {
+                System.Diagnostics.Process.Start("https://dyn365forlife.wixsite.com/my-site/post/tools-bulk-prefix-suffix-attributes-name");
+            }
         }
 
         private void byButton_Click(object sender, EventArgs e)

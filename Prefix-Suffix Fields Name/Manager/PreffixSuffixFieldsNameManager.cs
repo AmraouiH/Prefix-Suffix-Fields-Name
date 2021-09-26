@@ -76,9 +76,9 @@ namespace Prefix_Suffix_Fields_Name
             fieldDataGridView.Sort(fieldDataGridView.Columns[0], ListSortDirection.Ascending);
             fieldDataGridView.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Regular);
             fieldDataGridView.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            fieldDataGridView.Columns[0].HeaderText = "DisplayName";
+            fieldDataGridView.Columns[0].HeaderText = "Display Name";
             fieldDataGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            fieldDataGridView.Columns[1].HeaderText = "SchemaName";
+            fieldDataGridView.Columns[1].HeaderText = "Schema Name";
             fieldDataGridView.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             fieldDataGridView.Columns[2].HeaderText = "Type";
             fieldDataGridView.Columns[3].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
