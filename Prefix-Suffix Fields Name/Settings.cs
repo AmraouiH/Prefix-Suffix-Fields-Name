@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Prefix_Suffix_Fields_Name.Manager;
 
 namespace Prefix_Suffix_Fields_Name
 {
     /// <summary>
-    /// This class can help you to store settings for your plugin
+    /// Plugin settings, persisted by XrmToolBox between sessions.
     /// </summary>
     /// <remarks>
     /// This class must be XML serializable
@@ -15,5 +11,15 @@ namespace Prefix_Suffix_Fields_Name
     public class Settings
     {
         public string LastUsedOrganizationWebappUrl { get; set; }
+
+        public string LastText { get; set; }
+        public bool LastIsSuffix { get; set; }
+        public bool LastIsRemove { get; set; }
+
+        /// <summary>State of the "Options" toggle of the Rename card.</summary>
+        public bool CleanupEnabled { get; set; }
+
+        /// <summary>Everything configured in the Options dialog.</summary>
+        public CleanupOptions Options { get; set; } = new CleanupOptions();
     }
 }
