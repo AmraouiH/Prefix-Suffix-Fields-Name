@@ -1,250 +1,391 @@
-﻿using Microsoft.Xrm.Sdk;
+﻿using Microsoft.Crm.Sdk.Messages;
+using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Metadata.Query;
 using Microsoft.Xrm.Sdk.Query;
-using Prefix_Suffix_Components_Name.Manager;
+using Prefix_Suffix_Fields_Name.Manager;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Security;
 using Label = Microsoft.Xrm.Sdk.Label;
 
 namespace Prefix_Suffix_Fields_Name
 {
-    public static class PreffixSuffixFieldsNameManager
+    public static class PrefixSuffixFieldsNameManager
     {
-        public static RetrieveMetadataChangesResponse GetEntitiesMetadat(IOrganizationService service)
+        /// <summary>
+        /// ExecuteMultiple accepts at most 1000 requests; keep a safety margin.
+        /// </summary>
+        private const int BatchSize = 500;
+
+        public static EntityMetadata[] GetEntitiesMetadata(IOrganizationService service)
         {
-
-            MetadataFilterExpression entityFilter = new MetadataFilterExpression(LogicalOperator.And);
-
-            EntityQueryExpression entityQueryExpression = new EntityQueryExpression()
+            var request = new RetrieveMetadataChangesRequest
             {
-                Criteria = entityFilter,
-                Properties = new MetadataPropertiesExpression("LogicalName", "DisplayName")
-            };
-            RetrieveMetadataChangesRequest retrieveMetadataChangesRequest = new RetrieveMetadataChangesRequest()
-            {
-                Query = entityQueryExpression,
+                Query = new EntityQueryExpression
+                {
+                    Criteria = new MetadataFilterExpression(LogicalOperator.And),
+                    Properties = new MetadataPropertiesExpression("LogicalName", "DisplayName")
+                },
                 ClientVersionStamp = null
             };
 
-            return (RetrieveMetadataChangesResponse)service.Execute(retrieveMetadataChangesRequest);
+            var response = (RetrieveMetadataChangesResponse)service.Execute(request);
+            return response.EntityMetadata.ToArray();
         }
 
-        public static void SetEntitiesGridViewHeaders(DataTable dt, DataGridView entityGridView)
+        public static string GetLabel(Label label)
         {
-            entityGridView.DataSource = dt;
-            entityGridView.RowHeadersVisible = false;
-            entityGridView.Sort(entityGridView.Columns[0], ListSortDirection.Ascending);
-            entityGridView.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Regular);
-            entityGridView.Columns[0].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            entityGridView.Columns[0].DefaultCellStyle.Alignment = DataGridViewContentAlignment.BottomCenter;
-            entityGridView.Columns[0].HeaderText = String.Empty;
-            entityGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            entityGridView.Columns[1].HeaderText = "Display Name";
-            entityGridView.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            entityGridView.Columns[2].HeaderText = "Schema Name";
+            if (label == null)
+                return null;
+            if (label.UserLocalizedLabel != null)
+                return label.UserLocalizedLabel.Label;
+            return label.LocalizedLabels.FirstOrDefault()?.Label;
         }
 
-        public static void SetFieldsGridViewHeaders(DataTable dt, DataGridView fieldDataGridView)
+        public static List<Field> GetEntityFields(IOrganizationService service, string entityLogicalName, BackgroundWorker worker = null)
         {
-            fieldDataGridView.DataSource = dt;
-            fieldDataGridView.RowHeadersVisible = false;
-            fieldDataGridView.Sort(fieldDataGridView.Columns[0], ListSortDirection.Ascending);
-            fieldDataGridView.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Regular);
-            fieldDataGridView.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            fieldDataGridView.Columns[0].HeaderText = "Display Name";
-            fieldDataGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            fieldDataGridView.Columns[1].HeaderText = "Schema Name";
-            fieldDataGridView.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            fieldDataGridView.Columns[2].HeaderText = "Type";
-            fieldDataGridView.Columns[3].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            fieldDataGridView.Columns[3].HeaderText = "IsSearchable";
-            
-        }
-        public static void SetFieldsGridViewHeaders(DataTable dt, DataGridView fieldDataGridView, bool isForResult=false)
-        {
-            fieldDataGridView.DataSource = dt;
-            fieldDataGridView.RowHeadersVisible = false;
-            fieldDataGridView.Sort(fieldDataGridView.Columns[0], ListSortDirection.Ascending);
-            fieldDataGridView.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Regular);
-            fieldDataGridView.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            fieldDataGridView.Columns[0].HeaderText = "Display Name";
-            fieldDataGridView.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            fieldDataGridView.Columns[1].HeaderText = "Schema Name";
-            fieldDataGridView.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            fieldDataGridView.Columns[2].HeaderText = "Type";
-            fieldDataGridView.Columns[3].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            fieldDataGridView.Columns[3].HeaderText = "isSearchable";
-            if (isForResult) {
-                fieldDataGridView.Columns[4].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-                fieldDataGridView.Columns[4].HeaderText = "isUpdated";
-            }
-        }
+            worker?.ReportProgress(0, "Retrieving table metadata...");
 
-        public static List<Field> getEntityFields(IOrganizationService service, String entityTechnicalName, BackgroundWorker worker)
-        {
-            //Dictionary<String, String> _fields = new Dictionary<string, string>();
-            List<Field> _fields = new List<Field>();
-            RetrieveEntityRequest retrieveBankAccountEntityRequest = new RetrieveEntityRequest
+            var response = (RetrieveEntityResponse)service.Execute(new RetrieveEntityRequest
             {
                 EntityFilters = EntityFilters.Attributes,
-                LogicalName = entityTechnicalName,
+                LogicalName = entityLogicalName,
                 RetrieveAsIfPublished = true
-            };
-            
-            worker.ReportProgress(0, "Retrieving Entity MetaData...");
-            RetrieveEntityResponse retrieveEntityResponse = (RetrieveEntityResponse)service.Execute(retrieveBankAccountEntityRequest);
-            formatList(retrieveEntityResponse, _fields);
+            });
 
-            worker.ReportProgress(0, "Retrievig Fields ...");
-            return _fields;
-        }
-
-        public static void formatList(RetrieveEntityResponse _metadata, List<Field> _fields)
-        {
-            var attributes = FilterAttributes(_metadata.EntityMetadata.Attributes);
-            foreach (var field in attributes)
-            {
-                //_fields.Add(field.LogicalName, field.DisplayName.UserLocalizedLabel != null ? field.DisplayName.UserLocalizedLabel.Label : @"N/A");
-                Field attr = new Field();
-                attr.displayName = field.DisplayName.UserLocalizedLabel != null ? field.DisplayName.UserLocalizedLabel.Label : @"N/A";
-                attr.schemaName = field.LogicalName;
-                attr.type = field.AttributeType.Value.ToString();
-                attr.IsSearchable = field.IsValidForAdvancedFind.Value.ToString();
-                _fields.Add(attr);
-            }
+            return FilterAttributes(response.EntityMetadata.Attributes)
+                .Select(a => new Field
+                {
+                    DisplayName = GetLabel(a.DisplayName) ?? "N/A",
+                    SchemaName = a.LogicalName,
+                    Type = a.AttributeType?.ToString() ?? string.Empty,
+                    IsSearchable = a.IsValidForAdvancedFind?.Value ?? false,
+                    IsPrimaryName = a.IsPrimaryName ?? false,
+                    RequiredLevel = a.RequiredLevel?.Value ?? AttributeRequiredLevel.None,
+                    MetadataId = a.MetadataId ?? Guid.Empty,
+                    IsAuditEnabled = a.IsAuditEnabled?.Value ?? false,
+                    DescriptionLabel = a.Description,
+                    DisplayNameLabel = a.DisplayName
+                })
+                .ToList();
         }
 
         public static IEnumerable<AttributeMetadata> FilterAttributes(AttributeMetadata[] attributes)
         {
             return attributes.Where(a =>
-                            a.AttributeOf == null
-                            && a.AttributeType.Value != AttributeTypeCode.Virtual
-                            && a.AttributeType.Value != AttributeTypeCode.PartyList
-                            && a.IsValidForRead.Value
-                            && a.LogicalName.IndexOf("composite") < 0
-                            && a.IsRenameable.Value
-                            //&& a.IsValidForForm.Value
-                            //&& ((BooleanManagedProperty)a.IsRenameable).Value ==  true
-                            ).OrderBy(a => a.LogicalName);
+                    a.AttributeOf == null
+                    && a.AttributeType != AttributeTypeCode.Virtual
+                    && a.AttributeType != AttributeTypeCode.PartyList
+                    && (a.IsValidForRead ?? false)
+                    && a.LogicalName.IndexOf("composite", StringComparison.OrdinalIgnoreCase) < 0
+                    && (a.IsRenameable?.Value ?? false))
+                .OrderBy(a => a.LogicalName);
         }
 
-        public static string[] SelectedEntity(DataGridViewRowCollection rows)
+        /// <summary>
+        /// Returns the new label, or null when there is nothing to change
+        /// (prefix already present on Add, prefix absent on Remove, empty result).
+        /// Comparison is case-insensitive.
+        /// </summary>
+        public static string ComputeNewLabel(string label, string text, AffixPosition position, AffixAction action)
         {
-            List<String> selectedEntity = new List<string>();
-            foreach (DataGridViewRow row in rows)
+            if (string.IsNullOrEmpty(text))
+                return null;
+
+            label = label ?? string.Empty;
+            const StringComparison cmp = StringComparison.OrdinalIgnoreCase;
+            string result;
+
+            if (action == AffixAction.Add)
             {
-                var cell = row.Cells[0];
-                if (cell != null)
-                {
-                    if ((bool)cell.Value != null && (bool)cell.Value == true)
-                    {
-                        selectedEntity.Add(row.Cells[1].Value.ToString());
-                        selectedEntity.Add(row.Cells[2].Value.ToString());
-                    }
-                }
+                if (position == AffixPosition.Prefix)
+                    result = label.StartsWith(text, cmp) ? null : text + label;
+                else
+                    result = label.EndsWith(text, cmp) ? null : label + text;
             }
-            return selectedEntity.ToArray();
+            else
+            {
+                if (position == AffixPosition.Prefix)
+                    result = label.StartsWith(text, cmp) ? label.Substring(text.Length) : null;
+                else
+                    result = label.EndsWith(text, cmp) ? label.Substring(0, label.Length - text.Length) : null;
+            }
+
+            return string.IsNullOrWhiteSpace(result) ? null : result;
         }
 
-        public static Dictionary<String, String> SelectedFields(DataGridViewRowCollection rows)
+        /// <summary>
+        /// Returns the new display name (user language) of each field, or null when it does not change.
+        /// </summary>
+        public static Dictionary<string, string> PreviewDisplayNames(IList<Field> fields, string text, AffixPosition position, AffixAction action, int baseLanguageCode)
         {
-            //TechninaclName,DisplayName
-            Dictionary<String, String> selectedFields = new Dictionary<String, String>();
-            foreach (DataGridViewRow row in rows)
+            var result = new Dictionary<string, string>();
+            foreach (var f in fields)
             {
-                selectedFields.Add(row.Cells[1].Value.ToString(), row.Cells[0].Value.ToString());
+                var label = string.IsNullOrEmpty(text) ? null : BuildNewLabel(f, text, position, action, baseLanguageCode, out _);
+                result[f.SchemaName] = label == null ? null : GetNewName(label);
             }
-            return selectedFields;
+            return result;
         }
 
+        private static string GetNewName(Label label) => label.UserLocalizedLabel?.Label ?? label.LocalizedLabels.FirstOrDefault()?.Label;
 
-        public static void UpdateAttributes(IOrganizationService service, String text, String preffixSuffix, String addRemove, int searchable, Dictionary<String, String> fields, String entityName, int languageCode, BackgroundWorker worker) {
-            Dictionary<String, String> UpdatedFields = FormatedFieldsName(text, preffixSuffix, addRemove, fields);
-            UpdateAttribute(service, entityName, searchable, languageCode, UpdatedFields, worker);
-        }
+        /// <summary>
+        /// 1. Removes the fields from forms / views (cleanup options),
+        /// 2. updates the field properties: display name (all translations), requirement, Advanced Find,
+        /// 3. publishes the table.
+        /// </summary>
+        public static List<UpdateResult> UpdateAttributes(
+            IOrganizationService service,
+            string entityLogicalName,
+            IList<Field> fields,
+            string text,
+            AffixPosition position,
+            AffixAction action,
+            CleanupOptions cleanup,
+            int baseLanguageCode,
+            BackgroundWorker worker)
+        {
+            cleanup = cleanup ?? CleanupOptions.None;
+            var results = new List<UpdateResult>();
 
-
-        private static Dictionary<String, String> FormatedFieldsName(String text, String preffixSuffix, String addRemove, Dictionary<String, String> fields) {
-            Dictionary<String, String> fieldsUpdate = new Dictionary<string, string>();
-            foreach (String field in fields.Keys)
+            // 0. Backup (a failed backup stops everything: nothing is changed without it)
+            if (cleanup.AutoBackup)
             {
-                if (preffixSuffix == "Preffix")
+                var folder = BackupManager.Backup(service, entityLogicalName, fields, cleanup.EffectiveBackupFolder(), worker);
+                results.Add(new UpdateResult { SchemaName = "-", Operation = "Backup", Status = ChangeStatus.Updated, Message = folder });
+            }
+
+            // 1. Components: forms, views, charts, plug-in steps, mappings, duplicate rules, field security
+            results.AddRange(UsageManager.CleanupComponents(service, entityLogicalName, fields, cleanup, worker));
+
+            // 2. Field properties
+            worker.ReportProgress(0, "Preparing field updates...");
+            var pending = new List<KeyValuePair<UpdateResult, OrganizationRequest>>();
+
+            foreach (var field in fields)
+            {
+                var result = new UpdateResult
                 {
-                    if (addRemove == "Add")
+                    SchemaName = field.SchemaName,
+                    Operation = "Field properties",
+                    OldDisplayName = field.DisplayName,
+                    NewDisplayName = field.DisplayName,
+                    ComponentType = UsageManager.ComponentAttribute,
+                    ComponentId = field.MetadataId
+                };
+
+                var newLabel = string.IsNullOrEmpty(text) ? null : BuildNewLabel(field, text, position, action, baseLanguageCode, out _);
+                var changeSearch = cleanup.RemoveFromAdvancedFind && field.IsSearchable;
+                var changeRequired = cleanup.MakeNotRequired
+                    && field.RequiredLevel != AttributeRequiredLevel.None
+                    && field.RequiredLevel != AttributeRequiredLevel.SystemRequired;
+
+                var changes = new List<string>();
+                var attribute = new AttributeMetadata { LogicalName = field.SchemaName };
+                if (newLabel != null)
+                {
+                    attribute.DisplayName = newLabel;
+                    result.NewDisplayName = GetNewName(newLabel);
+                    changes.Add($"Display name: {field.DisplayName} → {result.NewDisplayName}");
+                }
+                if (changeRequired)
+                {
+                    attribute.RequiredLevel = new AttributeRequiredLevelManagedProperty(AttributeRequiredLevel.None);
+                    changes.Add("Requirement: Optional");
+                }
+                if (changeSearch)
+                {
+                    attribute.IsValidForAdvancedFind = new BooleanManagedProperty(false);
+                    changes.Add("Advanced Find: off");
+                }
+                if (cleanup.DisableAuditing && field.IsAuditEnabled)
+                {
+                    attribute.IsAuditEnabled = new BooleanManagedProperty(false);
+                    changes.Add("Auditing: off");
+                }
+                if (cleanup.AddDeprecationNote)
+                {
+                    var description = BuildDeprecationDescription(field, cleanup, baseLanguageCode);
+                    if (description != null)
                     {
-                        fieldsUpdate.Add(field, text + fields[field]);
-                    }
-                    else if (addRemove == "Remove")
-                    {
-                        if (fields[field].StartsWith(text))
-                            fieldsUpdate.Add(field, fields[field].StartsWith(text) ? fields[field].Substring(text.Length) : fields[field]);
+                        attribute.Description = description;
+                        changes.Add("Description: deprecation note added");
                     }
                 }
-                else if (preffixSuffix == "Suffix")
+
+                if (changes.Count == 0)
                 {
-                    if (addRemove == "Add")
+                    // Nothing to report when only a cleanup of forms/views was asked.
+                    if (!string.IsNullOrEmpty(text))
                     {
-                        fieldsUpdate.Add(field, fields[field] + text);
+                        result.Status = ChangeStatus.Skipped;
+                        result.Message = action == AffixAction.Add
+                            ? "Display name already contains the text, nothing to change"
+                            : "Display name does not contain the text, nothing to change";
+                        results.Add(result);
                     }
-                    else if (addRemove == "Remove")
+                    continue;
+                }
+
+                result.Message = string.Join(" · ", changes);
+                results.Add(result);
+                pending.Add(new KeyValuePair<UpdateResult, OrganizationRequest>(result, new UpdateAttributeRequest
+                {
+                    Attribute = attribute,
+                    EntityName = entityLogicalName,
+                    // Keep labels of languages we do not send.
+                    MergeLabels = true
+                }));
+            }
+
+            for (int start = 0; start < pending.Count; start += BatchSize)
+            {
+                var batch = pending.Skip(start).Take(BatchSize).ToList();
+                worker.ReportProgress(0, $"Updating fields {start + 1}-{start + batch.Count} of {pending.Count}...");
+
+                var multiple = new ExecuteMultipleRequest
+                {
+                    Settings = new ExecuteMultipleSettings { ContinueOnError = true, ReturnResponses = true },
+                    Requests = new OrganizationRequestCollection()
+                };
+                multiple.Requests.AddRange(batch.Select(p => p.Value));
+
+                var response = (ExecuteMultipleResponse)service.Execute(multiple);
+
+                for (int i = 0; i < batch.Count; i++)
+                {
+                    var item = response.Responses.FirstOrDefault(r => r.RequestIndex == i);
+                    var result = batch[i].Key;
+                    if (item?.Fault != null)
                     {
-                        if (fields[field].EndsWith(text))
-                            fieldsUpdate.Add(field, fields[field].Substring(0, fields[field].Length - text.Length));
+                        result.Status = ChangeStatus.Failed;
+                        result.NewDisplayName = result.OldDisplayName;
+                        result.Message = item.Fault.Message;
+                    }
+                    else
+                    {
+                        result.Status = ChangeStatus.Updated;
                     }
                 }
             }
 
-            return fieldsUpdate;
-        }
+            var changed = results.Where(r => r.Status == ChangeStatus.Updated && r.ComponentType != 0 && r.ComponentId != Guid.Empty)
+                .GroupBy(r => new { r.ComponentType, r.ComponentId })
+                .ToList();
 
-        private static void UpdateAttribute(IOrganizationService service , String entityName, int searchable, int languageCode,  Dictionary<String, String> UpdatedFields, BackgroundWorker worker) {
-            // Create an ExecuteMultipleRequest object.
-            worker.ReportProgress(0, "Preparing Update Request ...");
-            var multipleRequest = new ExecuteMultipleRequest()
+            // 3. Solution
+            if (!string.IsNullOrWhiteSpace(cleanup.SolutionUniqueName) && changed.Count > 0)
             {
-                Settings = new ExecuteMultipleSettings()
+                worker.ReportProgress(0, $"Adding {changed.Count} component(s) to the solution {cleanup.SolutionUniqueName}...");
+                int added = 0;
+                var errors = new List<string>();
+                foreach (var c in changed)
                 {
-                    ContinueOnError = true,
-                    ReturnResponses = false
-                },
-                Requests = new OrganizationRequestCollection()
-            };
-
-            foreach (var field in UpdatedFields.Keys)
-            {
-                try
-                {
-                    AttributeMetadata retrievedAttributeMetadata = new AttributeMetadata();
-                    retrievedAttributeMetadata.DisplayName = new Label(UpdatedFields[field], languageCode);
-                    retrievedAttributeMetadata.LogicalName = field;
-                    if (searchable == 0)//Nothing to update when user select Non
+                    try
                     {
-                        retrievedAttributeMetadata.IsValidForAdvancedFind = new BooleanManagedProperty(false);
+                        service.Execute(new AddSolutionComponentRequest
+                        {
+                            ComponentType = c.Key.ComponentType,
+                            ComponentId = c.Key.ComponentId,
+                            SolutionUniqueName = cleanup.SolutionUniqueName,
+                            AddRequiredComponents = false
+                        });
+                        added++;
                     }
-
-                    UpdateAttributeRequest updateRequest = new UpdateAttributeRequest
-                    {
-                        Attribute = retrievedAttributeMetadata,
-                        EntityName = entityName,
-                        MergeLabels = false
-                    };
-                    multipleRequest.Requests.Add(updateRequest);
+                    catch (Exception ex) { errors.Add($"{c.First().Operation}: {ex.Message}"); }
                 }
-                catch
+                results.Add(new UpdateResult
                 {
+                    SchemaName = "-",
+                    Operation = $"Solution · {cleanup.SolutionUniqueName}",
+                    Status = errors.Count == 0 ? ChangeStatus.Updated : ChangeStatus.Failed,
+                    Message = $"{added} component(s) added" + (errors.Count > 0 ? " · " + string.Join(" | ", errors) : string.Empty)
+                });
+            }
+
+            // 4. Publish
+            if (results.Any(r => r.Status == ChangeStatus.Updated && r.SchemaName != "-"))
+            {
+                if (cleanup.Publish)
+                {
+                    worker.ReportProgress(0, "Publishing table customizations...");
+                    service.Execute(new PublishXmlRequest
+                    {
+                        ParameterXml = $"<importexportxml><entities><entity>{SecurityElement.Escape(entityLogicalName)}</entity></entities></importexportxml>"
+                    });
+                    results.Add(new UpdateResult { SchemaName = "-", Operation = "Publish", Status = ChangeStatus.Updated, Message = $"Table {entityLogicalName} published" });
+                }
+                else
+                {
+                    results.Add(new UpdateResult { SchemaName = "-", Operation = "Publish", Status = ChangeStatus.Skipped, Message = "Not published (option): publish the table yourself" });
                 }
             }
-            worker.ReportProgress(0, "Updating Attributes Display Name ...");
-            service.Execute(multipleRequest);
+
+            return results;
+        }
+
+        /// <summary>
+        /// Adds the deprecation note before the description, in every language the field is translated in.
+        /// Returns null when every translation already starts with the note.
+        /// </summary>
+        private static Label BuildDeprecationDescription(Field field, CleanupOptions options, int baseLanguageCode)
+        {
+            var note = options.DeprecationText();
+            var prefix = options.DeprecationPrefix();
+            var languages = (field.DisplayNameLabel?.LocalizedLabels.Select(l => l.LanguageCode) ?? Enumerable.Empty<int>())
+                .Concat(field.DescriptionLabel?.LocalizedLabels.Select(l => l.LanguageCode) ?? Enumerable.Empty<int>())
+                .DefaultIfEmpty(baseLanguageCode)
+                .Distinct();
+
+            var labels = new List<LocalizedLabel>();
+            foreach (var lcid in languages)
+            {
+                var current = field.DescriptionLabel?.LocalizedLabels.FirstOrDefault(l => l.LanguageCode == lcid)?.Label ?? string.Empty;
+                if (current.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                labels.Add(new LocalizedLabel($"{note} {current}".Trim(), lcid));
+            }
+            if (labels.Count == 0)
+                return null;
+
+            var user = labels.FirstOrDefault(l => l.LanguageCode == (field.DescriptionLabel?.UserLocalizedLabel?.LanguageCode ?? baseLanguageCode)) ?? labels[0];
+            return new Label(user, labels.ToArray());
+        }
+
+        /// <summary>
+        /// Applies the prefix/suffix to every translation of the display name.
+        /// Returns null when no translation changes.
+        /// </summary>
+        private static Label BuildNewLabel(Field field, string text, AffixPosition position, AffixAction action, int baseLanguageCode, out string newDisplayName)
+        {
+            newDisplayName = field.DisplayName;
+            var localized = field.DisplayNameLabel?.LocalizedLabels?.ToList() ?? new List<LocalizedLabel>();
+            if (localized.Count == 0)
+            {
+                localized.Add(new LocalizedLabel(string.Empty, baseLanguageCode));
+            }
+
+            var newLabels = new List<LocalizedLabel>();
+            foreach (var l in localized)
+            {
+                var computed = ComputeNewLabel(l.Label, text, position, action);
+                if (computed != null)
+                    newLabels.Add(new LocalizedLabel(computed, l.LanguageCode));
+            }
+
+            if (newLabels.Count == 0)
+                return null;
+
+            var userLcid = field.DisplayNameLabel?.UserLocalizedLabel?.LanguageCode ?? baseLanguageCode;
+            var userLabel = newLabels.FirstOrDefault(l => l.LanguageCode == userLcid) ?? newLabels[0];
+            newDisplayName = userLabel.Label;
+
+            return new Label(userLabel, newLabels.ToArray());
         }
     }
 }
